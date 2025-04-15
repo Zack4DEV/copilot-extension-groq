@@ -1,0 +1,24 @@
+{
+  "name": "copilot-extension-groq",
+  "version": "1.0.0-SNAPSHOT",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "tsx --watch src/index.ts"
+  },
+  "keywords": [],
+  "author": "Zack4DEV",
+  "license": "MIT",
+  "description": "This project introduces a GitHub Copilot Extension integrated with Cloud Groq APIs , utilizing powerful AI models based on @copilot-extensions github models extension",
+  "dependencies": {
+    "@copilot-extensions/preview-sdk": ">=5.0.1",
+    "groq-sdk": ">=3.84.0"
+  },
+  "devDependencies": {
+    "@types/express": ">=4.17.21",
+    "@types/node": ">=22.1.0",
+    "tsx": ">=4.19.3",
+    "typescript": ">=5.5.4"
+  }
+}
