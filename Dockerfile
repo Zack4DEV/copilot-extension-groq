@@ -10,7 +10,7 @@ ENV NODE_ENV=production
 USER node
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install
 COPY --from=builder /usr/src/app/dist ./dist
 
 ENV PORT=8080
