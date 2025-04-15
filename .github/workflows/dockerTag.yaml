@@ -39,7 +39,7 @@ jobs:
 
       # It uses the `tags` and `labels` parameters to tag and label the image with the output from the "meta" step.
       - name: Build Docker image
-        run: docker build --label ${{ steps.meta.outputs.labels }} -t ${{ steps.meta.outputs.tags }} . 
+        run: docker build -t ${{ steps.meta.outputs.tags }} . 
 
       - name: Push Docker image
         id: push
