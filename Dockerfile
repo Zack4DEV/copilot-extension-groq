@@ -6,11 +6,10 @@ COPY . .
 RUN npm run build
 
 FROM node:20.16.0-alpine
-ENV NODE_ENV=production
 USER node
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm install
+RUN npm install --omit=dev
 COPY --from=builder /usr/src/app/dist ./dist
 
 ENV PORT=8080
