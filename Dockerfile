@@ -4,7 +4,7 @@ COPY . /usr/src/app
 WORKDIR /usr/src/app
 ADD . /usr/src/app
 ENV NODE_ENV production
-RUN npm ci --omit=dev
+RUN npm install --force
 RUN npm run build
 
 ENV PORT=8080
