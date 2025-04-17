@@ -1,49 +1,24 @@
 import Groq from "groq-sdk";
 import { ModelsAPI } from "./models-api.js";
 
-const groq = new Groq();
-
-// defaultModel is the model used for internal calls - for tool calling,
-// or just for chat completions.
+// Model used for internal calls like chat completions or tool calling.
 export const defaultModel = "gemma2-9b-it";
 
-// RunnerResponse is the response from a function call.
+// RunnerResponse structure
 export interface RunnerResponse {
-  model: string;
-  messages: groq.chat.completions.create({
-    "messages": [
-      {
-        "role": "user",
-        "content": ""
-      }
-    ],
-}) 
-};
+  modelUsed: string;
+  messages: string[]; 
+}
 
+// Abstract class for a tool using the ModelsAPI
 export abstract class Tool {
   modelsAPI: ModelsAPI;
-  static definition: groq.FunctionDefinition;
+  static definition: unknown; 
 
   constructor(modelsAPI: ModelsAPI) {
     this.modelsAPI = modelsAPI;
   }
 
-  static get tool(): groq.chat.completions.ChatCompletionTool {
-    return {
-      type: "function",
-      function: this.definition,
-    };
-  }
-
-  abstract execute(
-    messages: groq.chat.completions.create({
-    "messages": [
-      {
-        "role": "user",
-        "content": ""
-      }
-    ],
-}),
-    args: object
-  ): Promise<RunnerResponse>;
+  // Defined abstract methods here
+  abstract run(): Promise<RunnerResponse>;
 }

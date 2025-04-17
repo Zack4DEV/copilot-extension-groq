@@ -1,16 +1,12 @@
-FROM node:20.16.0-alpine AS builder
-WORKDIR /usr/src/app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM node:20.16.0-alpine
+FROM node:23.11.0-alpine AS builder
 USER node
 WORKDIR /usr/src/app
-COPY package*.json ./
-RUN npm install --omit=dev
 COPY --from=builder /usr/src/app/dist ./dist
+ENV NODE_ENV production
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+RUN npm run build
 
 ENV PORT=8080
 EXPOSE 8080

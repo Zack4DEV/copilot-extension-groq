@@ -1,53 +1,49 @@
 import Groq from "groq-sdk";
 import { RunnerResponse, defaultModel, Tool } from "../functions.js";
+import { ModelsAPI } from "./models-api.js";
 
-const groq = new Groq();
+abstract class Tool {
+  abstract run(messages: string[], args: Record<string, any>): Promise<RunnerResponse>;
+}
 
+// Define the class for listing available models
 export class listModels extends Tool {
   static definition = {
     name: "list_models",
-    description:
-      "This function lists the AI models available in Groq Cloud Models.",
+    description: "This function lists the AI models available in Groq Cloud Models.",
     parameters: {
       type: "object",
       properties: {},
-      description:
-        "This function does not require any input parameters. It simply returns a list of models.",
+      description: "No input parameters are required. It simply returns a list of models.",
     },
   };
 
-  async execute(
-    messages: groq.chat.completions.create({
-    "messages": [
-      {
-        "role": "user",
-        "content": ""
-      }
-    ],
-}) ) : Promise<RunnerResponse> {
-    const models = await this.modelsAPI.listModels();
+  async execute(messages: string[]): Promise<RunnerResponse> {
+    try {
+      // Fetch the list of models from ModelsAPI
+      const models: Model[] = await this.modelsAPI.listModels();
 
-    const systemMessage = [
-      "The user is asking for a list of available models.",
-      "Respond with a concise and readable list of the models, with a short description for each one.",
-      "Use markdown formatting to make each description more readable.",
-      "Begin each model's description with a header consisting of the model's name",
-      "That list of models is as follows:",
-      JSON.stringify(
-        models.map((model) => ({
-          name: model.displayName,
-          publisher: model.publisher,
-          description: model.summary,
-        }))
-      ),
-    ];
+      // Generate a system message with Markdown-formatted model details
+      const systemMessage = [
+        "The user is asking for a list of available models.",
+        "Respond with a concise and readable list of the models, including a short description for each one.",
+        "Use markdown formatting for better readability.",
+        "The list of models is as follows:",
+        models.map((model) => `
+          ## ${model.displayName || "Unknown Model"}
+          - **Publisher**: ${model.publisher || "Unknown"}
+          - **Description**: ${model.summary || "No summary available"}
+        `),
+      ];
 
-    return {
-      model: defaultModel,
-      messages: [
-        { role: "system", content: systemMessage.join("\n") },
-        ...messages,
-      ],
-    };
+      // Return the RunnerResponse
+      return {
+        modelUsed: defaultModel, // Use defaultModel as a placeholder
+        messages: systemMessage,
+      };
+    } catch (error) {
+      console.error("Error fetching models:", error);
+      throw new Error("Failed to fetch models. Please try again later.");
+    }
   }
 }
