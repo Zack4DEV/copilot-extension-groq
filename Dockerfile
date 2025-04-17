@@ -4,7 +4,7 @@ COPY . /usr/src/app
 WORKDIR /usr/src/app
 ADD . /usr/src/app
 ENV NODE_ENV production npm install
-RUN npm run build
+ENV NODE_ENV production npm run build
 
 ENV PORT=8080
 EXPOSE 8080
