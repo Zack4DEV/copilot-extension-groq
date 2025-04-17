@@ -1,12 +1,11 @@
 FROM node:23.11.0-alpine AS builder
 USER node
+COPY . /usr/src/app
 WORKDIR /usr/src/app
+ADD . /usr/src/app
 ENV NODE_ENV production
-COPY package*.json ./
 RUN npm ci --omit=dev
-COPY . .
 RUN npm run build
-COPY /usr/src/app/ ./
 
 ENV PORT=8080
 EXPOSE 8080
