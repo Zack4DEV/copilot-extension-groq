@@ -3,8 +3,7 @@ USER node
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 ADD . /usr/src/app
-ENV NODE_ENV production
-RUN npm install --force
+ENV NODE_ENV production npm install
 RUN npm run build
 
 ENV PORT=8080
