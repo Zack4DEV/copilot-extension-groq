@@ -6,7 +6,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 COPY . .
 RUN npm run build
-COPY /usr/src/app/dist ./dist
+COPY /usr/src/app/* ./
 
 ENV PORT=8080
 EXPOSE 8080
