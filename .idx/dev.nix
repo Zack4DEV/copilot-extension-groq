@@ -1,3 +1,5 @@
+
+
 # To learn more about how to use Nix to configure your environment
 # see: https://developers.google.com/idx/guides/customize-idx-env
 { pkgs, ... }: {
@@ -7,8 +9,11 @@
   # Use https://search.nixos.org/packages to find packages
   packages = [
       pkgs.nodejs_23
-      pkgs.nodePackages.nodemon
-      pkgs.docker
+      pkgs.typescript
+     # pkgs.vscode-extensions.ms-azuretools.vscode-docker
+      pkgs.docker_27
+      pkgs.docker-compose
+     # pkgs.docker-engine
 
       pkgs.sudo
     #  pkgs.gh
@@ -45,7 +50,7 @@
       };
        onStart = {
         # Example: start a background task to watch and re-build backend code
-         watch-backend = "node;
+         watch-backend = "npm run start";
       };
     };
   };
