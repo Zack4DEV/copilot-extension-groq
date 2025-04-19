@@ -23,7 +23,7 @@ export type Model = {
   schema?: ModelSchema;
 };
 
-export declare class ModelsAPI {
+export class ModelsAPI {
   inference: Groq;
   private _models: Model[] | null = null;
 
@@ -31,39 +31,36 @@ export declare class ModelsAPI {
     this.inference = groqClient;
   }
 
-  async getModel(model: string): Promise<{ model: Model; schema: ModelSchema }> {
-    const modelFromIndex = await this.getModelFromIndex(model);
-    const modelRes = await fetch("https://api.groq.com/openai/v1/models", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-    });
-    if (modelRes.ok) {
-      const modelData = await modelRes.json();
-      return {
-        model: modelFromIndex,
-        schema: modelData as ModelSchema,
-      };
-    } else {
-      throw new Error("Failed to fetch model: " + modelRes.statusText);
-    }
+  async getModel(modelId: string): Promise<{ model: Model; schema: ModelSchema | undefined }> {
+    const modelFromIndex = await this.getModelFromIndex(modelId);
+    const schema: ModelSchema | undefined = modelFromIndex.schema;
+    return {
+      model: modelFromIndex,
+      schema: schema,
+    };
   }
 
-  private async getModelFromIndex(model: string): Promise<Model> {
+  async loadModels(): Promise<void> {
+    const response = await this.inference.models.list();
+    this._models = response.data.map(apiModel => ({
+      id: apiModel.id,
+      name: apiModel.id,
+    })) as Model[];
+  }
+
+  public getLoadedModels(): Model[] | null {
+    return this._models;
+  }
+
+  private async getModelFromIndex(modelId: string): Promise<Model> {
     if (!this._models) {
       await this.loadModels();
     }
-    const found = this._models?.find((m) => m.id === model);
+    const models = this._models as Model[];
+    const found = models.find((m) => m.id === modelId);
     if (!found) {
-      throw new Error(`Model ${model} not found in index`);
+      throw new Error(`Model ${modelId} not found in index`);
     }
     return found;
   }
-
-  private async loadModels(): Promise<void> {
-    const response = await this.inference.models.list();
-    this._models = response.data as Model[];
-  }
 }

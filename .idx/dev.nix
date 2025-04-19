@@ -50,7 +50,7 @@
       };
        onStart = {
         # Example: start a background task to watch and re-build backend code
-         watch-backend = "npm run start";
+         watch-backend = "npm run build && npm run start";
       };
     };
   };

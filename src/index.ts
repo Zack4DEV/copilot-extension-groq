@@ -1,65 +1,90 @@
-import { createServer, type IncomingMessage } from "node:http";
-
-import {
-  verifyAndParseRequest,
-  transformPayloadForOpenAICompatibility,
-  getFunctionCalls,
-  createDoneEvent,
-  createReferencesEvent,
-} from "@copilot-extensions/preview-sdk";
-
-import Groq from "groq-sdk";
-
-import { describeModel } from "./functions/describe-model.js";
-import { executeModel } from "./functions/execute-model.js";
+import { createServer } from "http";
+import { verifyAndParseRequest } from "@copilot-extensions/preview-sdk";
 import { listModels } from "./functions/list-models.js";
-import { RunnerResponse } from "./functions.js";
-import { recommendModel } from "./functions/recommend-model.js";
+import { DescribeModel } from "./functions/describe-model.js";
 import { ModelsAPI } from "./models-api.js";
+import Groq from "groq-sdk";
+import { ExecuteModel } from "./functions/execute-model.js";
+import { RecommendModel } from "./functions/recommend-model.js";
+import handler from "./handler.js";
 
-async function getBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let data = "";
-    req.on("data", (chunk) => {
-      data += chunk;
-    });
-    req.on("end", () => resolve(data));
-    req.on("error", reject);
-  });
-}
 
-const server = createServer(async (request, response) => {
-  if (request.method === "GET") {
-    response.statusCode = 200;
-    response.end("OK");
-    return;
-  }
-
-  const body = await getBody(request);
-
-  let verifyAndParseRequestResult: Awaited<ReturnType<typeof verifyAndParseRequest>>;
-  const apiKey = request.headers["authorization"]; 
-
-  if (!apiKey) {
-    response.statusCode = 401;
-    response.end("Unauthorized: Missing API key");
-    return;
-  }
-
-  try {
-    verifyAndParseRequestResult = await verifyAndParseRequest(body, {
-      secret: process.env.GROQ_API_KEY ?? "",
-    });
-
-    response.statusCode = 200;
-    response.end("Request processed successfully.");
-  } catch (err: any) {
-    response.statusCode = 400;
-    response.end(`Error: ${err.message}`);
-  }
-  
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 });
 
-server.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+const modelsAPI = new ModelsAPI(groq);
+
+interface FunctionRunner {
+  run(args: any): Promise<any>;
+}
+
+const extensionManifest = {
+  name: "Groq Extension",
+  description: "Interact with Groq's Models.",
+  icon: "src/assets/image/Copilot.png",
+  functions: {
+    listModels: new listModels(modelsAPI),
+    describeModel: new DescribeModel(modelsAPI),
+    executeModel: new ExecuteModel(modelsAPI),
+    recommendModel: new RecommendModel(modelsAPI),
+  } as Record<string, FunctionRunner>,
+};
+
+createServer(async (req, res) => {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(chunk);
+  }
+  const body = Buffer.concat(chunks).toString();
+
+  const response = await handler.customHandler(body, process.env.COPILOT_SECRET, process.env.COPILOT_KEY_ID);
+
+  res.writeHead(response.statusCode, { "Content-Type": "application/json" });
+  res.end(response.body);
+}).listen(3000);
+
+
+export default handler.customHandler(extensionManifest, async (requestString: string, secret: string, keyID: string) => {
+  console.log("requestString", requestString);
+  console.log("secret", secret);
+  console.log("keyID", keyID);
+
+  const request = await verifyAndParseRequest(requestString, secret, keyID);
+
+  if (!request || !request.isValidRequest) {
+    return {
+      statusCode: 401,
+      body: "Invalid request signature",
+    };
+  }
+  
+  const payload = request.payload;
+
+  const toolInvocation = (payload as any)?.toolInvocation;
+
+  if (!toolInvocation) {
+    return {
+      statusCode: 400,
+      body: "Missing toolInvocation in payload.",
+    };
+  }
+  
+  const { functionId, arguments: args } = toolInvocation;
+    
+  const functionToCall = extensionManifest.functions[functionId as keyof typeof extensionManifest.functions];
+
+  if (!functionToCall) {
+    return {
+      statusCode: 404,
+      body: `Function ${functionId} not found.`, 
+    };
+  }
+
+  const result = await functionToCall.run(args);
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(result),
+  };
 });
