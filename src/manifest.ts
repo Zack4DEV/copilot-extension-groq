@@ -4,6 +4,8 @@ import { ExecuteModel } from "./functions/execute-model.js";
 import { RecommendModel } from "./functions/recommend-model.js";
 import { ModelsAPI } from "./models-api.js";
 import Groq from "groq-sdk";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
 const modelsAPI = new ModelsAPI(groq);
