@@ -1,5 +1,5 @@
 import { createServer } from "http";
-import  handler from "./Handler.js"
+import  finalHandler from "./Handler.js"
 import { ModelsAPI } from "./models-api.js";
 import Groq from "groq-sdk";
 import * as dotenv from "dotenv";
@@ -25,9 +25,9 @@ createServer(async (req, res) => {
     chunks.push(chunk);
   }
   const body = Buffer.concat(chunks).toString();
+ 
+  const response = await finalHandler(body, process.env.COPILOT_SECRET, process.env.COPILOT_KEY_ID);
 
-  const response = await handler(body, process.env.COPILOT_SECRET, process.env.COPILOT_KEY_ID);
-
-  res.writeHead(response.statusCode, { "Content-Type": "application/json" });
+  res.writeHead(response.statusCode, { "Content-Type": "text/plain" });
   res.end(response.body);
 }).listen(3000);
