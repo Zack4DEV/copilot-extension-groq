@@ -53,7 +53,10 @@ export class SendMessage extends Tool {
 
     try {
       const resp = await groq.chatComplete(usedModel, session.messages, false);
-      const content = resp.choices?.[0]?.message?.content ?? "No response from model";
+      let content = "No response from model";
+      if ("choices" in resp) {
+        content = resp.choices?.[0]?.message?.content ?? "No response from model";
+      }
 
       // append assistant message
       defaultSessionManager.appendMessage(sessionId, { role: "assistant", content });

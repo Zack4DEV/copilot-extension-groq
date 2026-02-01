@@ -9,7 +9,7 @@ import Groq from "groq-sdk";
 export type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 
 export class GroqClient {
-  private client: ReturnType<typeof Groq>;
+  private client: Groq;
 
   constructor(apiKey?: string) {
     const key = apiKey ?? process.env.GROQ_API_KEY;

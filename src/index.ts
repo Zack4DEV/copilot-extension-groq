@@ -8,6 +8,8 @@ if (!process.env.GROQ_API_KEY || !process.env.COPILOT_SECRET || !process.env.COP
   throw new Error("Environment variables GROQ_API_KEY, COPILOT_SECRET, and COPILOT_KEY_ID are required.");
 }
 
+const port = process.env.PORT || 3000;
+
 createServer(async (req, res) => {
   try {
     const chunks: Buffer[] = [];
@@ -37,6 +39,6 @@ createServer(async (req, res) => {
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Internal server error" }));
   }
-}).listen(3000, () => {
-  console.log("Server listening on port 3000");
+}).listen(port, () => {
+  console.log(`Server listening on port ${port}`);
 });

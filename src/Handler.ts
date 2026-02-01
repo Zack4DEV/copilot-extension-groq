@@ -1,6 +1,5 @@
 import { verifyAndParseRequest } from "@copilot-extensions/preview-sdk";
 import { extensionManifest } from "./manifest.js";
-import type { handler as CopilotExtensionHandler } from "@copilot-extensions/preview-sdk";
 
 // Define a type for your custom handler logic
 type CustomHandlerLogic = (
@@ -61,23 +60,8 @@ const customHandlerLogic: CustomHandlerLogic = async (
   };
 };
 
-// Attempt to import the handler from the SDK, with a fallback
-let sdkHandler: CopilotExtensionHandler | undefined;
-try {
-  const { handler: sdkHandlerImport } = await import("@copilot-extensions/preview-sdk");
-  sdkHandler = sdkHandlerImport;
-  console.log("Successfully imported handler from @copilot-extensions/preview-sdk");
-} catch (error) {
-  console.error("Error importing handler from @copilot-extensions/preview-sdk:", error);
-  console.warn("Falling back to custom handler logic.");
-}
-
-// Export the handler, prioritizing the SDK's if available
-const finalHandler: CopilotExtensionHandler = sdkHandler
-  ? sdkHandler(extensionManifest, customHandlerLogic)
-  : (extensionManifest, logic) => async (req, secret, key) => {
-      console.log("Using fallback handler with custom logic.");
-      return logic(req, secret, key);
-    };
-
-export default finalHandler;
+// Export the handler
+export default async (req: any, secret: any, key: any) => {
+    console.log("Using fallback handler with custom logic.");
+    return customHandlerLogic(req, secret, key);
+};

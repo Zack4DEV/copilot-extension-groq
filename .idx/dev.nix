@@ -8,7 +8,7 @@
 
   # Use https://search.nixos.org/packages to find packages
   packages = [
-      pkgs.nodejs_23
+      pkgs.nodejs
       pkgs.typescript
      # pkgs.vscode-extensions.ms-azuretools.vscode-docker
       pkgs.docker_27
@@ -27,16 +27,16 @@
     extensions = [];
     # Enable previews
       previews = {
-        # web = {
-        #   # Example: run "npm run start" with PORT set to IDX's defined port for previews,
-        #   # and show it in IDX's web preview panel
-        #   command = ["npm" "run" "start"];
-        #   manager = "web";
-        #   env = {
-        #     # Environment variables to set for your server
-        #     PORT = "$PORT";
-        #   };
-        # };
+        web = {
+          # Example: run "npm run start" with PORT set to IDX's defined port for previews,
+          # and show it in IDX's web preview panel
+          command = ["npm" "run" "start"];
+          manager = "web";
+          env = {
+            # Environment variables to set for your server
+            PORT = "$PORT";
+          };
+        };
       };
 
     # Workspace lifecycle hooks
