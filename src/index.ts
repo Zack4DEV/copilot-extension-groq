@@ -12,12 +12,25 @@ const port = process.env.PORT || 3000;
 
 createServer(async (req, res) => {
   try {
+    if (req.method !== 'POST') {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end('<html><body><h1>Server is running</h1><p>This is a backend service for a GitHub Copilot Extension. You can interact with it through your IDE.</p></body></html>');
+      return;
+    }
+
     const chunks: Buffer[] = [];
     for await (const chunk of req) {
       chunks.push(chunk);
     }
 
-    const body = Buffer.concat(chunks).toString();
+    const body = Buffer.concat(chunks).toString().trim();
+    console.log("Request body:", body);
+
+    if (!body) {
+        res.writeHead(200, { "Content-Type": "text/plain" });
+        res.end("OK");
+        return;
+    }
 
     const response = await finalHandler(
       body,

@@ -18,50 +18,65 @@ const customHandlerLogic: CustomHandlerLogic = async (
   console.log("secret", secret);
   console.log("keyID", keyID);
 
-  const request = await verifyAndParseRequest(requestString, secret, keyID);
-
-  if (!request || !request.isValidRequest) {
+  if (!requestString) {
     return {
-      statusCode: 401,
-      body: "Invalid request signature",
+      statusCode: 200,
+      body: "OK",
     };
   }
 
-  const payload = request.payload;
+  try {
+    const request = await verifyAndParseRequest(requestString, secret, keyID);
 
-  const toolInvocation = (payload as any)?.toolInvocation;
+    if (!request || !request.isValidRequest) {
+      return {
+        statusCode: 401,
+        body: "Invalid request signature",
+      };
+    }
 
-  if (!toolInvocation) {
+    const payload = request.payload;
+
+    const toolInvocation = (payload as any)?.toolInvocation;
+
+    if (!toolInvocation) {
+      return {
+        statusCode: 400,
+        body: "Missing toolInvocation in payload.",
+      };
+    }
+
+    const { functionId, arguments: args } = toolInvocation;
+
+    const functionToCall =
+      extensionManifest.functions[
+        functionId as keyof typeof extensionManifest.functions
+      ];
+
+    if (!functionToCall) {
+      return {
+        statusCode: 404,
+        body: `Function ${functionId} not found.`,
+      };
+    }
+
+    const result = await functionToCall.run(args);
+
     return {
-      statusCode: 400,
-      body: "Missing toolInvocation in payload.",
+      statusCode: 200,
+      body: JSON.stringify(result),
+    };
+  } catch (error) {
+    console.error("Error processing request:", error);
+    return {
+      statusCode: 500,
+      body: "Internal server error",
     };
   }
-
-  const { functionId, arguments: args } = toolInvocation;
-
-  const functionToCall =
-    extensionManifest.functions[
-      functionId as keyof typeof extensionManifest.functions
-    ];
-
-  if (!functionToCall) {
-    return {
-      statusCode: 404,
-      body: `Function ${functionId} not found.`,
-    };
-  }
-
-  const result = await functionToCall.run(args);
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify(result),
-  };
 };
 
 // Export the handler
 export default async (req: any, secret: any, key: any) => {
-    console.log("Using fallback handler with custom logic.");
-    return customHandlerLogic(req, secret, key);
+  console.log("Using fallback handler with custom logic.");
+  return customHandlerLogic(req, secret, key);
 };
